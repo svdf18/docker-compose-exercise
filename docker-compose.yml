@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  api:
+    container_name: blogs
+    build: ./api_server
+    env_file: .env
+    ports:
+      - $API_LOCAL_PORT:3000
+    environment:
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=$MYSQL_ROOT_PASSWORD
+    networks:
+      - network1
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: mysql-for-api
+    image: mysql:8.0.34
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+    ports:
+      - $MYSQLDB_LOCAL_PORT:3306
+    volumes:
+      - ./data:/var/lib/mysql 
+      - ./api_server/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - network1
+      
+   # This healthcheck will ensure that the mysql service is started before the api service starts
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+networks:
+  network1:
+    driver: bridge
