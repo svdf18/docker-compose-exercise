@@ -1,1 +1,4 @@
 data
+
+# You should DEFINITELY also ignore the .env-file
+# It's not done here to get us a quick start on the exercise
